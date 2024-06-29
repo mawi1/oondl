@@ -1,0 +1,27 @@
+name: Release
+on:
+  push:
+    tags:
+      - "v*.*.*"
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:freedesktop-23.08
+      options: --privileged
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build flatpak
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: oondl.flatpak
+          manifest-path: io.github.mawi1.oondl.json
+          cache-key: flatpak-builder-${{ github.sha }}
+      - name: Creatue release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: oondl.flatpak

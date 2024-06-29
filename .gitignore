@@ -1,0 +1,5 @@
+/target
+test_files/
+snapshots/
+.flatpak-builder/
+build-dir

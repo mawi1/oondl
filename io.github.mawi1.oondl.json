@@ -1,0 +1,41 @@
+{
+    "app-id": "io.github.mawi1.oondl",
+    "runtime": "org.freedesktop.Platform",
+    "runtime-version": "23.08",
+    "sdk": "org.freedesktop.Sdk",
+    "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
+    "command": "oondl",
+    "finish-args": [
+        "--share=ipc",
+        "--socket=fallback-x11",
+        "--socket=wayland",
+        "--device=dri",
+        "--share=network",
+        "--filesystem=xdg-download",
+        "--filesystem=xdg-videos"
+    ],
+    "build-options": {
+        "append-path": "/usr/lib/sdk/rust-stable/bin"
+    },
+    "modules": [{
+        "name": "oondl",
+        "buildsystem": "simple",
+        "build-options": {
+            "env": {
+                "CARGO_HOME": "/run/build/oondl/cargo"
+            }
+        },
+        "build-commands": [
+            "cargo --offline fetch --manifest-path Cargo.toml --verbose",
+            "cargo --offline build --release --verbose",
+            "install -Dm755 ./target/release/oondl -t /app/bin/",
+            "install -Dm644 ./io.github.mawi1.oondl.desktop -t /app/share/applications/"
+        ],
+        "sources": [{
+                "type": "dir",
+                "path": "."
+            },
+            "cargo-sources.json"
+        ]
+    }]
+}

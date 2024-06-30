@@ -1,5 +1,6 @@
 use anyhow::{anyhow, ensure, Context, Ok};
 use const_format::concatcp;
+use html_escape::decode_html_entities;
 use lazy_static::lazy_static;
 use regex::Regex;
 use url::Url;
@@ -11,13 +12,15 @@ pub(super) fn extract_title(html: &str) -> anyhow::Result<String> {
         static ref RE: Regex =
             Regex::new(r#"<meta\s*property="og:title"\s*content="(.*)""#).unwrap();
     }
-    Ok(RE
-        .captures(&html)
-        .context("could not extract title")?
-        .get(1)
-        .unwrap()
-        .as_str()
-        .to_owned())
+    Ok(decode_html_entities(
+        &RE.captures(&html)
+            .context("could not extract title")?
+            .get(1)
+            .unwrap()
+            .as_str()
+            .to_owned(),
+    )
+    .into_owned())
 }
 
 pub(super) fn extract_segment_url(html: &str, segment_id: &str) -> anyhow::Result<Url> {
@@ -92,6 +95,12 @@ mod tests {
     fn test_extract_title() {
         let title: String = extract_title(&get_test_html("title.html")).unwrap();
         assert_eq!(title, "ZIB 1 vom 08.05.2024");
+    }
+
+    #[test]
+    fn test_extract_title_escaped() {
+        let title: String = extract_title(&get_test_html("title_escaped.html")).unwrap();
+        assert_eq!(title, "ORF-Hilfsaktion \"Österreich hilft Österreich\" - Wien heute vom 13.06.2024");
     }
 
     #[test]

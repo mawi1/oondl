@@ -75,9 +75,10 @@ async fn download_video(
     client_ref: &ClientRef,
     mpd_url: Url,
     quality: Quality,
-    dest_path: PathBuf,
+    dest_dir: &Path,
+    dest_path: &Path,
 ) -> Result<(), Error> {
-    let temp_dir: TempDir = TempDir::new()?;
+    let temp_dir: TempDir = TempDir::new_in(dest_dir)?;
 
     let Response {
         body: mpd_xml,
@@ -158,7 +159,7 @@ pub(super) async fn download(
             video_no: 1,
             total_videos: 1,
         });
-        download_video(http_client, client_ref, url, request.quality, dest_path).await?;
+        download_video(http_client, client_ref, url, request.quality, &request.dest_dir, &dest_path).await?;
     } else {
         let dest_path = check_mp4_path(&request.dest_dir, &dest_name).await?;
         match extract_video_info(&html)? {
@@ -167,12 +168,11 @@ pub(super) async fn download(
                     video_no: 1,
                     total_videos: 1,
                 });
-                download_video(http_client, client_ref, mpd_url, request.quality, dest_path)
+                download_video(http_client, client_ref, mpd_url, request.quality, &request.dest_dir, &dest_path)
                     .await?;
             }
             Segmented(mpd_urls) => {
-                //let dest_dir = try_create_dir(&request.dest_dir, &dest_name).await?;
-                let temp_dir = TempDir::new()?;
+                let temp_dir = TempDir::new_in(&request.dest_dir)?;
                 let total_videos = mpd_urls.len() as u16;
                 let mut concat_list = String::new();
 
@@ -188,7 +188,8 @@ pub(super) async fn download(
                         client_ref,
                         mpd_url,
                         request.quality,
-                        seg_dest_path,
+                        temp_dir.path(),
+                        &seg_dest_path,
                     )
                     .await?;
                     concat_list.push_str(&format!("file '{}'\n", &file_name));

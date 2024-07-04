@@ -5,7 +5,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use url::Url;
 
-const BASE_RE: &'static str = r"https?://[-a-zA-Z0-9.]+\.apa\.at/dash(/[-a-zA-Z0-9_]+)+";
+const BASE_RE: &'static str = r"https?://[-a-zA-Z0-9.]+\.apa\.at/dash/cms-(austria|worldwide|worldwide_episodes)(/[-a-zA-Z0-9_]+)*";
 
 pub(super) fn extract_title(html: &str) -> anyhow::Result<String> {
     lazy_static! {
@@ -124,6 +124,12 @@ mod tests {
     #[test]
     fn test_extract_segment_url() {
         let u = extract_segment_url(&get_test_html("segment.html"), "15658303");
+        assert_debug_snapshot!(u);
+    }
+
+    #[test]
+    fn test_extract_without_bumper_clip() {
+        let u = extract_video_info(&get_test_html("with_bumper_clip.html"));
         assert_debug_snapshot!(u);
     }
 }
